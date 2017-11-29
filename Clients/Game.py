@@ -16,16 +16,18 @@ class Game:
         self.opp_team = Team()
         self.__cycle_no = 0
         self.__server_address = (inet_address, port)
+        self.__input = None
+        self.__output = None
 
     def connect_to_server(self):
         try:
             self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.__socket.connect(self.__server_address)
-            self.__socket_file = self.__socket.makefile(encoding = 'utf-8')
-
+            self.__input = self.__socket.makefile(encoding ='utf-8', mode='r')
+            self.__output = self.__socket.makefile(encoding='utf-8', mode='w')
         except Exception as e:
-            print(e)
-            return False
+             print(e)
+             return False
         return True
 
     def start(self, team_name, team_logo):
@@ -35,24 +37,37 @@ class Game:
         lines.append("logo null")
 
         self.my_team.players = Strategy.init_players()
-        formation = "formation %s" % ", ".join(self.my_team.players)
+        x = ", ".join(str(each) for each in self.my_team.players)
+        formation = "formation %s" % x
         lines.append(formation)
+
+        print("writing register commands:")
+        for each in lines:
+            print(each)
+
         try:
-            self.__socket_file.writelines(lines)
-            self.__socket_file.flush()
+            self.__output.writelines(lines)
+            self.__output.flush()
         except Exception as e:
             print(e)
 
+        print("writing register commands successfully")
         while True:
+            print("waiting for response")
             try:
                 lines = []
-                lines.append(self.__socket_file.readline())
-                lines.append(self.__socket_file.readline())
-                lines.append(self.__socket_file.readline())
-                lines.append(self.__socket_file.readline())
+                lines.append(self.__input.readline())
+                lines.append(self.__input.readline())
+                lines.append(self.__input.readline())
+                lines.append(self.__input.readline())
+                print("response:")
+                for each in lines:
+                    print(each)
+
                 self.play_round(lines)
             except Exception as e:
-                print(e)
+                print("problem in getting response from server:")
+                print('\t', e)
                 return
 
     def play_round(self, lines):
@@ -71,8 +86,11 @@ class Game:
         self.kick(Strategy.do_turn(self))
 
     def kick(self, args):
-        self.__socket_file.write(', '.join(map(str, args)))
-        self.__socket_file.flush()
+        print("writing kick commands:")
+        print('\t', args)
+        self.__input.write(', '.join(map(str, args)))
+        self.__input.flush()
+        print("kick command sent")
 
 
     @property
@@ -108,3 +126,10 @@ class Game:
             self.__ball = ball
         else:
             raise ValueError('ball must be a client.Ball instance')
+
+
+
+if __name__ == "__main__":
+    game = Game('127.0.0.1', 9595)
+    game.connect_to_server()
+    game.start('Team1', None)

@@ -114,7 +114,7 @@ class Player:
 class Team:
 
     def __init__(self):
-        self.players = list(5)
+        self.__players = [None for i in range(5)]
         self.score = 0
 
     @property
