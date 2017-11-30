@@ -22,6 +22,7 @@ class Game:
     def connect_to_server(self):
         try:
             self.__socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.__socket.setblocking(True)
             self.__socket.connect(self.__server_address)
             self.__input = self.__socket.makefile(encoding ='utf-8', mode='r')
             self.__output = self.__socket.makefile(encoding='utf-8', mode='w')
@@ -37,7 +38,7 @@ class Game:
         lines.append("logo null")
 
         self.my_team.players = Strategy.init_players()
-        x = ", ".join(str(each) for each in self.my_team.players)
+        x = ",".join(str(each) for each in self.my_team.players)
         formation = "formation %s" % x
         lines.append(formation)
 
@@ -46,12 +47,16 @@ class Game:
             print(each)
 
         try:
-            self.__output.writelines(lines)
-            self.__output.flush()
+            for each in lines:
+                print(each, sep='\n', end='\n', flush=True, file=self.__output)
         except Exception as e:
             print(e)
 
-        print("writing register commands successfully")
+        print("writing register commands done successfully")
+        print("waiting for rival")
+        #todo handling rival team
+        self.opp_team.players = Strategy.init_players()
+        print("Game started!")
         while True:
             print("waiting for response")
             try:
@@ -62,13 +67,12 @@ class Game:
                 lines.append(self.__input.readline())
                 print("response:")
                 for each in lines:
-                    print(each)
-
-                self.play_round(lines)
+                    print(each, end='')
             except Exception as e:
                 print("problem in getting response from server:")
                 print('\t', e)
                 return
+            self.play_round(lines)
 
     def play_round(self, lines):
         self_team = lines[0].split(',')
@@ -88,8 +92,8 @@ class Game:
     def kick(self, args):
         print("writing kick commands:")
         print('\t', args)
-        self.__input.write(', '.join(map(str, args)))
-        self.__input.flush()
+        print(args, sep=',', end='\n', flush=True)
+        print(args, sep=',', end='\n', flush=True, file=self.__output)
         print("kick command sent")
 
 
