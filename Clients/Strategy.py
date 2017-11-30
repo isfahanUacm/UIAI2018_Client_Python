@@ -15,22 +15,3 @@ def do_turn(game):
         'power' to specify power of shoot
     """
     return player_id, angle, power
-
-def kick(args):
-
-    print(', '.join(map(str,args)))
-
-
-
-if __name__ == "__main__":
-    my_team = init_players()
-    self_team =  "1:3, 2:2.332, 1:4, 4.553:1.3, 3:1".split(",")
-    print(self_team)
-
-    for each, each_pos in zip(my_team, self_team):
-        each.pos.x, each.pos.y = map(float, each_pos.split(":"))
-    print(my_team)
-
-    kick(do_turn(my_team))
-
-
